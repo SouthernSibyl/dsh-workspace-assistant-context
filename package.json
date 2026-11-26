@@ -1,0 +1,49 @@
+{
+  "name": "dsh-workspace-assistant-context",
+  "version": "0.9.6",
+  "type": "module",
+  "description": "大肥鱼助理的上下文与预设包：注册 workspace-assistant（大肥鱼）preset 并向 systemPrompt 注入工作区实时快照。",
+  "author": "SouthernSibyl",
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "workspace-assistant"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SouthernSibyl/dsh-workspace-assistant-context.git"
+  },
+  "homepage": "https://github.com/SouthernSibyl/dsh-workspace-assistant-context#readme",
+  "bugs": {
+    "url": "https://github.com/SouthernSibyl/dsh-workspace-assistant-context/issues"
+  },
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.1-rc.2": "compatible",
+        "0.2.2-rc.1": "compatible"
+      }
+    }
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.2",
+    "node": ">=22"
+  }
+}

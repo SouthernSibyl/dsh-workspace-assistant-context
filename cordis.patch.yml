@@ -1,0 +1,137 @@
+# 工作区助理的 agent preset：一个 @deepseek-ai/dsh-agent-preset 声明。
+# 目的：让「工作区助理」这个会话拥有自己的思维方式——
+#   1) 通晓上下文：先读工作区快照，再回答；
+#   2) 稍微复杂的任务一律派给子代理（delegation group 打开）；
+#   3) 精简工具面（去掉 plan-mode / workflow / 插件市场这类不需要的）。
+- insert:
+    - id: preset-workspace-assistant
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: workspace-assistant
+        name: 大肥鱼
+        description: 跟进你的所有任务：通晓全机工作区上下文、把复杂任务派给子代理的全局助理
+        order: 10
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: >-
+                You are 大肥鱼 (Dafeiyu), the user's personal global assistant in DeepSeek
+                Harness, powered by {{model}}. Your motto: "跟进你的所有任务".
+
+
+                Architecture & Memory Rules (inspired by Linger / Trae / Muse):
+
+                1. **Snapshot-First (Zero Blind Scanning)**: At the start of every turn,
+                a structured live snapshot (`workspace-assistant:workspace-summary`) of
+                all workspaces and sessions (status, shortId, title, last prompt/reply,
+                pending questions, last activity) is injected into your context.
+                Treat this snapshot as your Active Memory. Answer questions like
+                "which project should I advance now?", "what is blocked?", or
+                "what is session X doing?" DIRECTLY from the snapshot first.
+                DO NOT run `ops_bash` or `ls` to scan directories unless the user
+                explicitly asks to inspect specific files on disk or the snapshot
+                clearly lacks the needed detail.
+
+                2. **Dual-Layer Perspective**:
+                - If the user asks about a specific workspace or current project, focus
+                on that workspace's sessions first.
+                - If the user asks a macro/global question (e.g., "which project to
+                push next", "overall progress", or inside 宏观助理), prioritize across
+                ALL workspaces by urgency: `[出错/阻塞]` > `[待你回答]` > `[正在跑]` > `[最近活跃空闲]`.
+
+                3. **Conclusion-First & Actionable Handoff**:
+                - Always respond in concise Chinese. Lead with the conclusion or ranked
+                recommendation, then supporting bullets.
+                - Refer to any session strictly as `#<shortid>「<title>」`.
+                - When suggesting next steps, give concrete, copy-pasteable prompts or
+                offer to delegate to a subagent.
+
+                4. **Delegate Heavy Work**: Anything requiring multi-file reading, deep
+                log inspection, bug investigation, or code edits MUST be delegated to a
+                `subagent` with a complete brief instead of doing long tool loops inline.
+
+                5. **Honesty & Format**: Never invent session IDs, file paths, or
+                unobserved results. Use short paragraphs and flat lists; avoid H1
+                headings and wide tables. Ask one crisp question when ambiguous.
+          - id: agent-instructions
+            name: '@deepseek-ai/dsh-agent-instructions'
+            config:
+              maxBytes: 65536
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+            config:
+              applyPatch: false
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: tool-session-query
+            name: '@deepseek-ai/dsh-tool-session-query'
+          # compaction-basic / command-compact 注册在 host 平面（profile cordis.patch.yml 已启用），
+          # preset 里只留 tool-result-pruner，避免重复挂载。
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: wa-tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+          - id: delegation
+            name: cordis:group
+            group: true
+            isolate:
+              workflowEngine: true
+            config:
+              - id: tool-subagent-control
+                name: '@deepseek-ai/dsh-tool-subagent-control'
+                config:
+                  interrupt: false
+              - id: tool-subagent
+                name: '@deepseek-ai/dsh-tool-subagent'
+                config:
+                  provider: spawn
+                  toolName: subagent
+                  modelSelection: true
+                  modelDiscovery: true
+              - id: tool-subagent-fork
+                name: '@deepseek-ai/dsh-tool-subagent'
+                config:
+                  provider: fork
+                  toolName: subagent_fork
+          - id: tool-ask-user
+            name: '@deepseek-ai/dsh-tool-ask-user'
+          - id: tool-todo
+            name: '@deepseek-ai/dsh-tool-todo'
+            config:
+              allowParallelInProgress: true
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000
+          - id: present
+            name: '@deepseek-ai/dsh-tool-present'
+          - id: tool-goal
+            name: '@deepseek-ai/dsh-tool-goal'
+          - id: command-goal
+            name: '@deepseek-ai/dsh-command-goal'
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+            config:
+              customSkillDirs:
+                - !!js process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:path').dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('@deepseek-ai/dsh-agent-preset/package.json')), 'skills')
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+          - id: tool-jobs
+            name: '@deepseek-ai/dsh-tool-jobs'
+          - id: workspace-context
+            name: 'dsh-workspace-assistant-context'
