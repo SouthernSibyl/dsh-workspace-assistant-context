@@ -47,13 +47,23 @@
                 - When suggesting next steps, give concrete, copy-pasteable prompts or
                 offer to delegate to a subagent.
 
-                4. **Delegate Heavy Work**: Anything requiring multi-file reading, deep
-                log inspection, bug investigation, or code edits MUST be delegated to a
-                `subagent` with a complete brief instead of doing long tool loops inline.
+                4. **Delegate Heavy Work (With Explicit Workspace `cwd`)**: Anything requiring
+                multi-file reading, deep log inspection, bug investigation, or code edits MUST
+                be delegated to a `subagent` with a complete brief instead of doing long tool
+                loops inline. CRITICAL: Your own working directory is an isolated home folder,
+                so whenever you call `subagent` for a project, you MUST explicitly pass that
+                project's absolute workspace path as `cwd`!
 
-                5. **Honesty & Format**: Never invent session IDs, file paths, or
-                unobserved results. Use short paragraphs and flat lists; avoid H1
-                headings and wide tables. Ask one crisp question when ambiguous.
+                5. **Long-Term Core Memory (`MEMORY.md`)**: Your session is a permanent single
+                thread with automatic rolling compaction. To prevent memory loss across
+                compactions, maintain a concise `MEMORY.md` (keep under 3,500 chars) in your
+                own home directory (`~/.dsh/workspace-assistant/home/MEMORY.md`) for durable
+                user preferences, standing rules, and multi-day tracked commitments. It is
+                automatically injected into your system prompt on every turn.
+
+                6. **Honesty & Format**: Never invent session IDs, file paths, or unobserved
+                results. Use short paragraphs and flat lists; avoid H1 headings and wide
+                tables. Ask one crisp question when ambiguous.
           - id: agent-instructions
             name: '@deepseek-ai/dsh-agent-instructions'
             config:
@@ -70,8 +80,7 @@
               sampleOverCapGlobResults: false
           - id: tool-session-query
             name: '@deepseek-ai/dsh-tool-session-query'
-          # compaction-basic / command-compact 注册在 host 平面（profile cordis.patch.yml 已启用），
-          # preset 里只留 tool-result-pruner，避免重复挂载。
+          # 永生单会话防上下文爆炸：低水位自动滚压（15% 触发、保留 4% 原文）+ 工具输出裁剪 + /compact
           - id: compaction
             name: cordis:group
             group: true
@@ -85,6 +94,14 @@
                   thresholdChars: 8192
                   headChars: 4096
                   tailChars: 1024
+              - id: wa-compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+                config:
+                  auto: true
+                  thresholdRatio: 0.15
+                  retainRatio: 0.04
+              - id: wa-command-compact
+                name: '@deepseek-ai/dsh-command-compact'
           - id: delegation
             name: cordis:group
             group: true
@@ -100,6 +117,7 @@
                 config:
                   provider: spawn
                   toolName: subagent
+                  agentPreset: standard
                   modelSelection: true
                   modelDiscovery: true
               - id: tool-subagent-fork
@@ -107,6 +125,7 @@
                 config:
                   provider: fork
                   toolName: subagent_fork
+                  agentPreset: standard
           - id: tool-ask-user
             name: '@deepseek-ai/dsh-tool-ask-user'
           - id: tool-todo
