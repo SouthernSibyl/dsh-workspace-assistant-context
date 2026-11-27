@@ -80,12 +80,13 @@
               sampleOverCapGlobResults: false
           - id: tool-session-query
             name: '@deepseek-ai/dsh-tool-session-query'
-          # 永生单会话防上下文爆炸：低水位自动滚压（15% 触发、保留 4% 原文）+ 工具输出裁剪 + /compact
+          # 永生单会话防上下文爆炸：只保留工具输出裁剪。
+          # 压缩后端（compaction-basic / command-compact）由 profile 根层启用（tokenMeter 的
+          # projection units 是进程级，必须在 host 平面注册），preset 里再挂会重复注册。
           - id: compaction
             name: cordis:group
             group: true
             isolate:
-              compaction: true
               toolResultPruner: true
             config:
               - id: wa-tool-result-pruner
@@ -94,14 +95,6 @@
                   thresholdChars: 8192
                   headChars: 4096
                   tailChars: 1024
-              - id: wa-compaction-basic
-                name: '@deepseek-ai/dsh-compaction-basic'
-                config:
-                  auto: true
-                  thresholdRatio: 0.15
-                  retainRatio: 0.04
-              - id: wa-command-compact
-                name: '@deepseek-ai/dsh-command-compact'
           - id: delegation
             name: cordis:group
             group: true
