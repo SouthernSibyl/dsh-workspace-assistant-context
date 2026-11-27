@@ -50,9 +50,8 @@
                 4. **Delegate Heavy Work (With Explicit Workspace `cwd`)**: Anything requiring
                 multi-file reading, deep log inspection, bug investigation, or code edits MUST
                 be delegated to a `subagent` with a complete brief instead of doing long tool
-                loops inline. CRITICAL: Your own working directory is an isolated home folder,
-                so whenever you call `subagent` for a project, you MUST explicitly pass that
-                project's absolute workspace path as `cwd`!
+                loops inline. Give each subagent a complete brief: the goal, the workspace
+                path, the acceptance criteria, and the files it may edit.
 
                 5. **Long-Term Core Memory (`MEMORY.md`)**: Your session is a permanent single
                 thread with automatic rolling compaction. To prevent memory loss across
@@ -78,6 +77,14 @@
             name: '@deepseek-ai/dsh-tool-fs-search'
             config:
               sampleOverCapGlobResults: false
+          # 工具面重排（F11）：补一个 shell，让助理能就地核实（git log / curl 自己的接口 / 看日志），
+          # 复杂任务仍按 persona 派给子代理。跨平台：Windows 走 pwsh，其它平台走 bash。
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
           - id: tool-session-query
             name: '@deepseek-ai/dsh-tool-session-query'
           # 永生单会话防上下文爆炸：只保留工具输出裁剪。
@@ -147,3 +154,7 @@
             name: '@deepseek-ai/dsh-tool-jobs'
           - id: workspace-context
             name: 'fatfish-persona-assistant-context'
+            config:
+              # 派活到项目时是否向 prompt 注入「必须显式传 cwd」的硬规则（F11）。
+              # 关掉 -> 助理只按快照回答，prompt 里不再出现 cwd 规则。
+              delegationCwd: true

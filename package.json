@@ -29,7 +29,8 @@
     "lib/index.js",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "scripts"
   ],
   "dsh": {
     "bundle": {
@@ -45,5 +46,8 @@
   "engines": {
     "dsh": ">=0.2.1-rc.2",
     "node": ">=22"
+  },
+  "scripts": {
+    "tools": "node scripts/preset-tools.mjs"
   }
 }
