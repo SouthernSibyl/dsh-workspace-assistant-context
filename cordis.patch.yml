@@ -134,4 +134,4 @@
           - id: tool-jobs
             name: '@deepseek-ai/dsh-tool-jobs'
           - id: workspace-context
-            name: 'dsh-workspace-assistant-context'
+            name: 'fatfish-persona-assistant-context'

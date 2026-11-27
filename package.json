@@ -1,5 +1,5 @@
 {
-  "name": "dsh-workspace-assistant-context",
+  "name": "fatfish-persona-assistant-context",
   "version": "0.9.6",
   "type": "module",
   "description": "大肥鱼助理的上下文与预设包：注册 workspace-assistant（大肥鱼）preset 并向 systemPrompt 注入工作区实时快照。",
@@ -13,11 +13,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SouthernSibyl/dsh-workspace-assistant-context.git"
+    "url": "git+https://github.com/SouthernSibyl/fatfish-persona-assistant-context.git"
   },
-  "homepage": "https://github.com/SouthernSibyl/dsh-workspace-assistant-context#readme",
+  "homepage": "https://github.com/SouthernSibyl/fatfish-persona-assistant-context#readme",
   "bugs": {
-    "url": "https://github.com/SouthernSibyl/dsh-workspace-assistant-context/issues"
+    "url": "https://github.com/SouthernSibyl/fatfish-persona-assistant-context/issues"
   },
   "main": "lib/index.js",
   "exports": {
