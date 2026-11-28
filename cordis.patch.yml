@@ -120,12 +120,14 @@
                   agentPreset: standard
                   modelSelection: true
                   modelDiscovery: true
+              # provider=fork 不支持独立选 preset；写了会让整份 preset 判 invalid：
+              # agent-preset/invalid: tool-subagent-fork ... provider "fork" does not
+              # support independent agent preset selection
               - id: tool-subagent-fork
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
                   provider: fork
                   toolName: subagent_fork
-                  agentPreset: standard
           - id: tool-ask-user
             name: '@deepseek-ai/dsh-tool-ask-user'
           - id: tool-todo
